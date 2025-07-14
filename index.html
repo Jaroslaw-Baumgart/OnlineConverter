@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>File Converter</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="left-panel">
+      <h1>🔁 Online File Converter</h1>
+
+      <h2>📄 PDF</h2>
+      <form action="/convert/pdf-to-jpg" method="POST" enctype="multipart/form-data">
+        <label>PDF → JPG: <input type="file" name="pdf" accept=".pdf" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <form action="/convert/pdf-to-txt" method="POST" enctype="multipart/form-data">
+        <label>PDF → TXT: <input type="file" name="pdf" accept=".pdf" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <h2>🖼️ Images</h2>
+      <form action="/convert/jpg-to-png" method="POST" enctype="multipart/form-data">
+        <label>JPG → PNG: <input type="file" name="image" accept=".jpg,.jpeg" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <form action="/convert/png-to-jpg" method="POST" enctype="multipart/form-data">
+        <label>PNG → JPG: <input type="file" name="image" accept=".png" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <form action="/convert/jpg-to-pdf" method="POST" enctype="multipart/form-data">
+        <label>JPG → PDF: <input type="file" name="image" accept=".jpg,.jpeg" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <h2>📝 Text</h2>
+      <form action="/convert/txt-to-pdf" method="POST" enctype="multipart/form-data">
+        <label>TXT → PDF: <input type="file" name="text" accept=".txt" required></label>
+        <button type="submit">Convert</button>
+      </form>
+
+      <h2>📑 Word Documents</h2>
+      <form action="/convert/docx-to-pdf" method="POST" enctype="multipart/form-data">
+        <label>DOCX → PDF: <input type="file" name="docx" accept=".docx" required></label>
+        <button type="submit">Convert</button>
+      </form>
+    </div>
+
+    <div class="right-panel">
+      <div id="preview">
+        <h2>📥 File Preview</h2>
+      </div>
+    </div>
+  </div>
+
+  <script>
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const preview = document.getElementById('preview');
+  preview.innerHTML = '<p>Processing... Please wait.</p>';
+
+  try {
+    const response = await fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form)
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      let errorMessage = data.error || 'Unknown error occurred.';
+      if (data.details) errorMessage += `<br><small>${data.details}</small>`;
+      if (data.solution) errorMessage += `<br><br>Possible solution: ${data.solution}`;
+      throw new Error(errorMessage);
+    }
+
+    displayPreview(data);
+  } catch (error) {
+    preview.innerHTML = `
+      <div class="error-message">
+        <h2>❌ Conversion Error</h2>
+        <p>${error.message}</p>
+      </div>
+      <a href="/"><button>Try Again</button></a>
+    `;
+  }
+}
+
+function displayPreview(data) {
+  const preview = document.getElementById('preview');
+  let previewContent = '';
+
+  if (data.files && data.files.length > 0) {
+    if (data.fileType === 'txt') {
+      previewContent = `
+        <div class="text-preview">
+          <iframe src="${data.files[0].url}" width="100%" height="400px"></iframe>
+          <a href="${data.files[0].url}" download="${data.files[0].name}">
+            <button class="download-btn">Download ${data.files[0].name}</button>
+          </a>
+        </div>
+      `;
+    } else {
+      previewContent = `<div class="gallery">`;
+      data.files.forEach(file => {
+        previewContent += `
+          <div class="gallery-item">
+            ${file.url.endsWith('.jpg') || file.url.endsWith('.png') ? 
+              `<img src="${file.url}" alt="Preview" />` : 
+              `<div class="file-icon">📄 ${file.name}</div>`}
+            <a href="${file.url}" download="${file.name}">
+              <button class="download-btn">Download ${file.name}</button>
+            </a>
+          </div>
+        `;
+      });
+      previewContent += `</div>`;
+    }
+  } else if (data.filename) {
+    const fileUrl = `/output/${data.filename}`;
+    previewContent = `
+      <div class="single-file">
+        ${data.fileType === 'txt' ? 
+          `<iframe src="${fileUrl}" width="100%" height="400px"></iframe>` :
+         data.fileType === 'pdf' ? 
+          `<iframe src="${fileUrl}" width="100%" height="500px"></iframe>` :
+          `<img src="${fileUrl}" alt="Preview" />`}
+        <a href="${fileUrl}" download="${data.filename}">
+          <button class="download-btn">Download ${data.filename}</button>
+        </a>
+      </div>
+    `;
+  }
+
+  preview.innerHTML = `
+    <h2>📥 ${data.title}</h2>
+    ${previewContent}
+  `;
+}
+
+document.querySelectorAll('form').forEach(form => {
+  form.addEventListener('submit', handleFormSubmit);
+});
+  </script>
+</body>
+</html>
