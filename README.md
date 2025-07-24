@@ -144,7 +144,7 @@ brew install poppler unoconv
 
 #### Windows:
 - [Download LibreOffice](https://www.libreoffice.org/download/download/) and add `C:\Program Files\LibreOffice\program` to `PATH`.
-- [Download Poppler](https://blog.alivate.com.au/poppler-windows/) and add `C:\poppler\bin` to `PATH`.
+- [Download Poppler](https://github.com/oschwartz10612/poppler-windows/releases) and add `C:\poppler\bin` to `PATH`.
 
 ---
 
